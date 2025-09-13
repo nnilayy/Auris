@@ -1,9 +1,0 @@
-<!-- Simple SVG icon that can be converted to PNG -->
-<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-  <rect width="16" height="16" fill="#1e3c72"/>
-  <rect x="2" y="2" width="2" height="12" fill="#ffd700"/>
-  <rect x="5" y="4" width="2" height="8" fill="#ffd700"/>
-  <rect x="8" y="3" width="2" height="10" fill="#ffd700"/>
-  <rect x="11" y="5" width="2" height="6" fill="#ffd700"/>
-  <circle cx="8" cy="8" r="1" fill="#fff"/>
-</svg>
