@@ -1,0 +1,5 @@
+node_modules/
+icons/
+images/
+reference/
+**/*.min.js
