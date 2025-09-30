@@ -8,24 +8,24 @@
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "icons": {
-    "16": "icons/auris-icon-light-svg-16.png",
-    "24": "icons/auris-icon-light-svg-24.png",
-    "32": "icons/auris-icon-light-svg-32.png",
-    "48": "icons/auris-icon-light-svg-48.png",
-    "128": "icons/auris-icon-light-svg-128.png"
+    "16": "src/icons/auris-icon-light-svg-16.png",
+    "24": "src/icons/auris-icon-light-svg-24.png",
+    "32": "src/icons/auris-icon-light-svg-32.png",
+    "48": "src/icons/auris-icon-light-svg-48.png",
+    "128": "src/icons/auris-icon-light-svg-128.png"
   },
   "background": {
-    "service_worker": "scripts/background/serviceWorker.js",
+    "service_worker": "src/scripts/background/serviceWorker.js",
     "type": "module"
   },
   "content_scripts": [],
   "action": {
-    "default_popup": "pages/popup.html",
+    "default_popup": "src/pages/popup.html",
     "default_title": "Auris",
     "default_icon": {
-      "16": "icons/auris-icon-light-svg-16.png",
-      "24": "icons/auris-icon-light-svg-24.png",
-      "32": "icons/auris-icon-light-svg-32.png"
+      "16": "src/icons/auris-icon-light-svg-16.png",
+      "24": "src/icons/auris-icon-light-svg-24.png",
+      "32": "src/icons/auris-icon-light-svg-32.png"
     }
   }
 }
