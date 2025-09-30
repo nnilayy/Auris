@@ -1,0 +1,26 @@
+{
+  "name": "auris",
+  "version": "1.0.0",
+  "description": "Auris is a browser extension that enhances tab audio with a studio-style signal chain: EQ, bass/voice controls, anti‑distortion, 8D/surround/echo effects, and a clean popup UI. As of Phase 7+, Auris runs capture‑only: no content scripts, no in‑page interception.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nnilayy/Auris.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nnilayy/Auris/issues"
+  },
+  "homepage": "https://github.com/nnilayy/Auris#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2"
+  }
+}
