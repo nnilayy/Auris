@@ -1,0 +1,351 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../styles.css" />
+    <title>Auris</title>
+  </head>
+  <body>
+    <!-- Settings Sidebar -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h3>Settings</h3>
+        <button class="sidebar-close" id="sidebar-close" title="Close Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9,18 15,12 9,6"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="sidebar-content">
+        <div class="setting-item">
+          <label class="setting-label">Theme</label>
+          <div class="theme-setting-row">
+            <div class="theme-info">
+              <div class="theme-description">Select between your favorite theme</div>
+              <div class="current-theme">Current Theme: <span id="current-theme-text">Dark</span></div>
+            </div>
+            <div class="theme-toggle-wrapper">
+              <div class="theme-toggle" id="theme-toggle" title="Toggle Dark/Light Mode"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Leave a Review</label>
+          <div class="review-setting-row">
+            <div class="review-info">
+              <div class="review-description">Leave a review and rate Auris on your browser extension store</div>
+            </div>
+            <div class="review-action-wrapper">
+              <button class="arrow-btn" id="leave-review" title="Leave a review on Chrome Web Store">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Report an Issue</label>
+          <div class="review-setting-row">
+            <div class="review-info">
+              <div class="review-description">Found a bug or have suggestions? Report issues to help improve Auris</div>
+            </div>
+            <div class="review-action-wrapper">
+              <button class="arrow-btn" id="report-issue" title="Report an issue on GitHub">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m8 2 1.88 1.88"/>
+                  <path d="M14.12 3.88 16 2"/>
+                  <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/>
+                  <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/>
+                  <path d="M12 20v-9"/>
+                  <path d="M6.53 9C4.6 8.8 3 7.1 3 5"/>
+                  <path d="M6 13H2"/>
+                  <path d="M3 21c0-2.1 1.7-3.9 3.8-4"/>
+                  <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/>
+                  <path d="M22 13h-4"/>
+                  <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Version Footer -->
+        <div class="version-footer">
+          <div class="version-text">Auris</div>
+          <div class="version-number">v1.0</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="header">
+      <button class="hamburger-menu" id="active-tabs-btn" title="View Active Audio Tabs">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+        </svg>
+      </button>
+      <img src="../images/auris-logo.png" alt="Auris Logo" class="logo" />
+      <h1>Auris</h1>
+      <button class="settings-toggle" id="settings-toggle" title="Open Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="status-container">
+      <div class="status inactive" id="status">No audio detected</div>
+    </div>
+
+    <!-- Section Navigation -->
+    <div class="section-nav">
+      <button class="nav-btn active" id="nav-equalizer">
+        <img src="../images/equalizer.png" alt="Equalizer" class="nav-icon" />
+        Equalizer
+      </button>
+      <button class="nav-btn" id="nav-audio">
+        <img src="../images/audio-controls.png" alt="Audio Controls" class="nav-icon" />
+        Audio Controls
+      </button>
+      <button class="nav-btn" id="nav-effects">
+        <img src="../images/audio-effects.png" alt="Audio Effects" class="nav-icon" />
+        Audio Effects
+      </button>
+    </div>
+
+    <div class="control-group section-content" id="section-equalizer">
+      <h3>
+        <img src="../images/equalizer.png" alt="Equalizer" class="section-icon" />
+        Equalizer
+      </h3>
+      <div class="equalizer">
+        <input type="range" class="slider" id="eq-32" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">32Hz</div>
+
+        <input type="range" class="slider" id="eq-64" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">64Hz</div>
+
+        <input type="range" class="slider" id="eq-125" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">125Hz</div>
+
+        <input type="range" class="slider" id="eq-250" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">250Hz</div>
+
+        <input type="range" class="slider" id="eq-500" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">500Hz</div>
+
+        <input type="range" class="slider" id="eq-1k" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">1kHz</div>
+
+        <input type="range" class="slider" id="eq-2k" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">2kHz</div>
+
+        <input type="range" class="slider" id="eq-4k" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">4kHz</div>
+
+        <input type="range" class="slider" id="eq-8k" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">8kHz</div>
+
+        <input type="range" class="slider" id="eq-16k" min="-12" max="12" value="0" step="0.5" />
+        <div class="eq-label">16kHz</div>
+      </div>
+      <div class="control-row" style="margin-top: 15px">
+        <span class="control-label">Presets:</span>
+        <select class="preset-select" id="preset-select">
+          <option value="flat">Flat</option>
+          <option value="rock">Rock</option>
+          <option value="pop">Pop</option>
+          <option value="jazz">Jazz</option>
+          <option value="classical">Classical</option>
+          <option value="electronic">Electronic</option>
+          <option value="hip-hop">Hip Hop</option>
+          <option value="vocal">Vocal</option>
+          <option value="bass-heavy">Bass Heavy</option>
+          <option value="treble-boost">Treble Boost</option>
+        </select>
+      </div>
+      <div class="reset-row">
+        <button class="reset-btn" id="reset-eq">
+          <img src="../images/reset.png" alt="Reset" class="reset-icon" />
+          Reset Equalizer
+        </button>
+      </div>
+    </div>
+
+    <div class="control-group section-content hidden" id="section-audio">
+      <h3>
+        <img src="../images/audio-controls.png" alt="Audio Controls" class="section-icon" />
+        Audio Controls
+      </h3>
+
+      <div class="audio-table">
+        <div class="audio-row">
+          <div class="label-cell">
+            <img src="../images/volume-boost.png" alt="Volume Boost" class="boost-icon-left" />
+            Volume Boost
+          </div>
+          <div class="slider-cell">
+            <input
+              type="range"
+              class="slider"
+              id="volume-boost"
+              min="100"
+              max="800"
+              value="100"
+              step="10"
+            />
+          </div>
+          <div class="value-cell">
+            <span class="value" id="volume-value">100%</span>
+          </div>
+        </div>
+
+        <div class="audio-row">
+          <div class="label-cell">
+            <img src="../images/bass-boost.png" alt="Bass Boost" class="boost-icon-left" />
+            Bass Boost
+          </div>
+          <div class="slider-cell">
+            <input
+              type="range"
+              class="slider"
+              id="bass-boost"
+              min="0"
+              max="20"
+              value="0"
+              step="1"
+            />
+          </div>
+          <div class="value-cell">
+            <span class="value" id="bass-value">0dB</span>
+          </div>
+        </div>
+
+        <div class="audio-row">
+          <div class="label-cell">
+            <img src="../images/voice-boost.png" alt="Voice Boost" class="boost-icon-left" />
+            Voice Boost
+          </div>
+          <div class="slider-cell">
+            <input
+              type="range"
+              class="slider"
+              id="voice-boost"
+              min="0"
+              max="15"
+              value="0"
+              step="1"
+            />
+          </div>
+          <div class="value-cell">
+            <span class="value" id="voice-value">0dB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="reset-row">
+        <button class="reset-btn" id="reset-audio">
+          <img src="../images/reset.png" alt="Reset" class="reset-icon" />
+          Reset Controls
+        </button>
+      </div>
+    </div>
+
+    <div class="control-group section-content hidden" id="section-effects">
+      <h3>
+        <img src="../images/audio-effects.png" alt="Audio Effects" class="section-icon" />
+        Audio Effects
+      </h3>
+
+      <div class="effect-controls">
+        <button class="toggle-btn" id="8d-toggle">
+          <img src="../images/8D-audio.png" alt="8D Audio" class="toggle-icon" />
+          8D Audio
+        </button>
+        <button class="toggle-btn" id="surround-toggle">
+          <img src="../images/surround-sound.png" alt="Surround Sound" class="toggle-icon" />
+          Surround Sound
+        </button>
+        <button class="toggle-btn" id="echo-toggle">
+          <img src="../images/echo-logo.png" alt="Echo" class="toggle-icon" />
+          Echo
+        </button>
+      </div>
+
+      <div class="effects-table">
+        <div class="effects-row">
+          <div class="label-cell">
+            <img src="../images/8D-audio.png" alt="8D Audio" class="boost-icon-left" />
+            8D Cycle Time
+          </div>
+          <div class="slider-cell">
+            <input
+              type="range"
+              class="slider"
+              id="8d-speed"
+              min="0.5"
+              max="10"
+              value="3"
+              step="0.5"
+            />
+          </div>
+          <div class="value-cell">
+            <span class="value" id="8d-speed-value">3.0s</span>
+          </div>
+        </div>
+
+        <div class="effects-row">
+          <div class="label-cell">
+            <img src="../images/surround-sound.png" alt="Surround Sound" class="boost-icon-left" />
+            Surround Depth
+          </div>
+          <div class="slider-cell">
+            <input
+              type="range"
+              class="slider"
+              id="surround-depth"
+              min="0"
+              max="100"
+              value="50"
+              step="5"
+            />
+          </div>
+          <div class="value-cell">
+            <span class="value" id="surround-depth-value">50%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="reset-row">
+        <button class="reset-btn" id="reset-effects">
+          <img src="../images/reset.png" alt="Reset" class="reset-icon" />
+          Reset Effects
+        </button>
+      </div>
+    </div>
+
+    <!-- Left Sidebar for Active Audio Tabs -->
+    <div class="tabs-sidebar-overlay" id="tabs-sidebar-overlay"></div>
+    <div class="tabs-sidebar" id="tabs-sidebar">
+      <div class="tabs-sidebar-header">
+        <h3>Active Audio Tabs</h3>
+        <button class="tabs-sidebar-close" id="tabs-sidebar-close" title="Close Active Tabs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15,18 9,12 15,6"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div class="tabs-sidebar-content">
+        <ul class="active-tabs-list" id="active-tabs-list"></ul>
+      </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <script src="../scripts/popup.js"></script>
+  </body>
+</html>
