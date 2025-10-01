@@ -40,7 +40,7 @@ Auris is a powerful browser extension that transforms your tab audio experience 
 
 ## Installation
 
-### From Chrome Web Store
+### From Your Browser's Extension WebStore
 1. Visit the [Auris Chrome Web Store page](https://chromewebstore.google.com/detail/auris-audio-equalizer/placeholder-id)
 2. Click "Add to Chrome"
 3. Grant necessary permissions for tab audio access
