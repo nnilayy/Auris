@@ -1,13 +1,9 @@
-// echo.js (Phase 5)
-// Basic delay + feedback network for echo effect.
-
 export function createEchoEffect(context) {
   const delay = context.createDelay(5.0);
   delay.delayTime.value = 0.25;
   const feedback = context.createGain();
   feedback.gain.value = 0.3;
   const wet = context.createGain();
-  // Start bypassed by default
   wet.gain.value = 0.0;
   const dry = context.createGain();
   dry.gain.value = 1.0;
@@ -20,11 +16,10 @@ export function createEchoEffect(context) {
   delay.connect(wet).connect(output);
 
   let active = false;
-  let wetLevel = 0.5; // default target wet when active
+  let wetLevel = 0.5;
 
   function setActive(flag) {
     active = !!flag;
-    // Toggle wet mix accordingly
     const target = active ? wetLevel : 0.0;
     wet.gain.setValueAtTime(target, context.currentTime);
   }

@@ -1,6 +1,3 @@
-// engineBootstrap.js (Phase 5)
-// Initializes handling for pipeline creation, gain, EQ, controls, anti-distortion and effects (8D, surround, echo).
-
 import { getPipeline, setPipeline, deletePipeline, safeCloseContext } from './stateRegistry.js';
 import { buildPipeline } from './pipelineBuilder.js';
 import { validateEQArray } from '../dsp/equalizer.js';
@@ -22,19 +19,17 @@ if (scheduler) {
   scheduler.start();
 }
 
-const activityMap = new Map(); // streamId -> { lastActive: number }
+const activityMap = new Map();
 
 function markActive(streamId) {
   activityMap.set(streamId, { lastActive: performance.now() });
 }
 
-// Concurrency guard: avoid multiple parallel creations per streamId
-const creatingPipelines = new Map(); // streamId -> Promise<pipeline>
+const creatingPipelines = new Map();
 
 async function ensurePipeline(streamId, { gain, eq, controls }) {
   const existing = getPipeline(streamId);
   if (existing) {
-    // If context was previously closed, purge and rebuild
     if (existing.context?.state === 'closed' || existing._closed) {
       try { deletePipeline(streamId); } catch {}
     } else {
@@ -53,7 +48,6 @@ async function ensurePipeline(streamId, { gain, eq, controls }) {
       eqArray: eq,
       controlsSettings: controls,
     });
-    // Register effects animation step (8D)
     if (pipeline.nodes?.effects && scheduler && !pipeline.nodes.effects._stepFn) {
       const effectsObj = pipeline.nodes.effects;
       if (effectsObj?.step) {
@@ -71,7 +65,6 @@ async function ensurePipeline(streamId, { gain, eq, controls }) {
 }
 
 export function initEngineMessaging(register) {
-  // Resolve best active streamId when background can't call getMediaStreamId
   register('resolveActiveStreamId', async () => {
     const { listPipelines } = await import('./stateRegistry.js');
     const ids = listPipelines();
@@ -81,7 +74,6 @@ export function initEngineMessaging(register) {
     if (ids.length === 1) {
       return { ok: true, streamId: ids[0] };
     }
-    // Choose most recently active
     let best = null;
     let bestTs = -1;
     ids.forEach((id) => {
@@ -108,7 +100,7 @@ export function initEngineMessaging(register) {
   });
 
   register('applySettings', async ({ streamId, settings }) => {
-    const { gain = 1, eq, volumeBoost, bassBoost, voiceBoost } = settings || {}; // eq optional
+    const { gain = 1, eq, volumeBoost, bassBoost, voiceBoost } = settings || {};
     const controls =
       volumeBoost !== undefined || bassBoost !== undefined || voiceBoost !== undefined
         ? { volumeBoost, bassBoost, voiceBoost }
@@ -204,24 +196,4 @@ export function initEngineMessaging(register) {
     return { ok: true };
   });
 
-  // Phase 8: analyser-backed status with fallback to lastActive heuristic
-  register('requestStatus', async ({ streamId }) => {
-    const rec = activityMap.get(streamId);
-    const now = performance.now();
-    const lastActive = rec?.lastActive || 0;
-    let rms = 0;
-    const pipeline = getPipeline(streamId);
-    if (pipeline && typeof pipeline.getRMS === 'function') {
-      try {
-        rms = pipeline.getRMS();
-      } catch {
-        rms = 0;
-      }
-    }
-    // Thresholds: -60dBFS ~= 0.001, -50dBFS ~= 0.003
-    const audioByRMS = rms > 0.0025;
-    const audioByRecent = now - lastActive < 5000;
-    const audioActive = audioByRMS || audioByRecent;
-    return { ok: true, audioActive, lastActive, rms };
-  });
 }

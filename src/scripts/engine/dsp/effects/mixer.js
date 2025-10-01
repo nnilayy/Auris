@@ -1,6 +1,3 @@
-// mixer.js (Phase 5)
-// Manages conditional routing of effects: eightD -> surround -> echo
-
 import { createEightDEffect } from './eightD.js';
 import { createSurroundEffect } from './surround.js';
 import { createEchoEffect } from './echo.js';
@@ -29,10 +26,7 @@ export function createEffectsMixer(context) {
   const surround = createSurroundEffect(context);
   const echo = createEchoEffect(context);
 
-  // Dynamic chain wiring with hard-bypass when inactive.
-  // Desired order (when active): eightD -> surround -> echo
-
-  const activeChain = []; // Tracks currently wired effects in order
+  const activeChain = [];
 
   function disconnectActiveChain() {
     if (activeChain.length === 0) {
@@ -70,10 +64,6 @@ export function createEffectsMixer(context) {
   }
 
   function reconnect() {
-    try {
-      console.debug('[Auris EffectsMixer] Reconnect start');
-    } catch {}
-
     disconnectActiveChain();
 
     const chain = buildChain();
@@ -108,9 +98,6 @@ export function createEffectsMixer(context) {
   }
 
   function setEffectActive(name, active) {
-    try {
-      console.debug('[Auris EffectsMixer] setEffectActive', name, active);
-    } catch {}
     switch (name) {
       case 'audio8d':
         eightD.setActive(active);

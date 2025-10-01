@@ -817,7 +817,7 @@ body {
   font-size: 11px;
   font-weight: 500;
   font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.3, 1);
   outline: none;
   box-shadow:
     3px 3px 6px rgba(0, 0, 0, 0.2),
@@ -1106,6 +1106,23 @@ body {
     2px 2px 4px rgba(0, 0, 0, 0.12),
     -2px -2px 4px rgba(255, 255, 255, 0.8);
 }
+
+/* Navigation button click states - inset on press, no green */
+.nav-btn:active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.05);
+}
+
+.light-theme .nav-btn:active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.2),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.1);
+}
+
+
 
 .nav-btn.active {
   background: #1a2e1a;
@@ -1576,7 +1593,7 @@ body {
 .audio-table {
   display: grid;
   grid-template-columns: 100px 1fr 40px;
-  gap: 8px 12px;
+  gap: 31.5px 12px;
   margin: 20px 0;
   align-items: center;
 }
@@ -1706,26 +1723,15 @@ body {
 }
 
 .value-cell .value {
-  background: var(--bg-primary);
-  padding: 6px 10px;
-  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   color: var(--accent-color);
   white-space: nowrap;
   min-width: 40px;
   text-align: center;
-  box-shadow:
-    -2px -2px 4px rgba(255, 255, 255, 0.1),
-    2px 2px 4px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
 }
 
-.light-theme .value-cell .value {
-  box-shadow:
-    -2px -2px 4px rgba(255, 255, 255, 0.9),
-    2px 2px 4px rgba(0, 0, 0, 0.15);
-}
+
 
 .boost-icon-left {
   width: 14px !important;
@@ -1750,7 +1756,7 @@ body {
 .effects-table {
   display: grid;
   grid-template-columns: 115px 1fr 50px;
-  gap: 8px 12px;
+  gap: 12px 12px;
   margin: 20px 0;
   align-items: center;
 }
@@ -1784,26 +1790,15 @@ body {
 }
 
 .effects-table .value-cell .value {
-  background: var(--bg-primary);
-  padding: 6px 10px;
-  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   color: var(--accent-color);
   white-space: nowrap;
   min-width: 40px;
   text-align: center;
-  box-shadow:
-    -2px -2px 4px rgba(255, 255, 255, 0.1),
-    2px 2px 4px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
 }
 
-.light-theme .effects-table .value-cell .value {
-  box-shadow:
-    -2px -2px 4px rgba(255, 255, 255, 0.9),
-    2px 2px 4px rgba(0, 0, 0, 0.15);
-}
+
 
 /* === CUSTOM SELECT DROPDOWN === */
 .preset-select {
@@ -2216,6 +2211,21 @@ body {
   filter: brightness(1.2) invert(0) saturate(1.1);
 }
 
+/* Toggle button click states - same inset effect as nav and reset buttons */
+.toggle-btn:active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1) !important;
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.05) !important;
+}
+
+.light-theme .toggle-btn:active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1) !important;
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.2),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.1) !important;
+}
+
 .reset-btn {
   display: flex;
   align-items: center;
@@ -2231,7 +2241,7 @@ body {
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.2, 0, 0.3, 1);
   outline: none;
   opacity: 0.5;
   pointer-events: none;
@@ -2301,6 +2311,21 @@ body {
 .reset-btn.active:hover .reset-icon {
   opacity: 0.9;
   filter: brightness(0) invert(1) opacity(0.9);
+}
+
+/* Reset button click states - same as nav buttons */
+.reset-btn.active:active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1) !important;
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.4),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.05) !important;
+}
+
+.light-theme .reset-btn.active:active {
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1) !important;
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.2),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.1) !important;
 }
 
 .light-theme .reset-btn.active:hover {

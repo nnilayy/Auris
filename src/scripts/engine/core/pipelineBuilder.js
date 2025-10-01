@@ -1,6 +1,3 @@
-// pipelineBuilder.js (Phase 5)
-// Order: source -> controls (sub/bass/voice) -> EQ -> compressor -> limiter -> effects mixer -> masterGain -> destination
-
 import { createEQ } from '../dsp/equalizer.js';
 import { createControls } from '../dsp/controls.js';
 import { createAntiDistortion } from '../dsp/antiDistortion.js';
@@ -12,13 +9,11 @@ export function buildPipeline({ stream, initialGain = 1.0, eqArray, controlsSett
 
   const source = context.createMediaStreamSource(stream);
 
-  // Controls (bass, voice, volume pre-stage)
   const controls = createControls(context);
   if (controlsSettings) {
     controls.applyControls(controlsSettings);
   }
 
-  // EQ
   const eq = createEQ(context);
   if (Array.isArray(eqArray)) {
     try {
@@ -26,7 +21,6 @@ export function buildPipeline({ stream, initialGain = 1.0, eqArray, controlsSett
     } catch {}
   }
 
-  // Anti-distortion (compressor + limiter)
   const anti = createAntiDistortion(context);
   if (controlsSettings) {
     try {
@@ -34,20 +28,16 @@ export function buildPipeline({ stream, initialGain = 1.0, eqArray, controlsSett
     } catch {}
   }
 
-  // Effects mixer (all effects always connected; internal active flags decide processing footprint)
   const effects = createEffectsMixer(context);
 
-  // Master gain node
   const masterGain = context.createGain();
   masterGain.gain.value = Math.max(0, initialGain);
 
-  // Wiring chain
   source.connect(controls.input);
   controls.output.connect(eq.input);
   eq.output.connect(anti.input);
   anti.output.connect(effects.input);
 
-  // Analyser for telemetry (Phase 8)
   const analyser = context.createAnalyser();
   analyser.fftSize = 2048;
   analyser.smoothingTimeConstant = 0.8;

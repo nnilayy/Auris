@@ -1,6 +1,3 @@
-// eightD.js (Phase 5)
-// Simulates 8D audio by orbiting a StereoPannerNode around the listener.
-
 export function createEightDEffect(context) {
   if (typeof context.createStereoPanner !== 'function') {
     throw new Error('StereoPannerNode is required for 8D effect');
@@ -110,7 +107,6 @@ export function createEightDEffect(context) {
   }
 
   function step() {
-    // Oscillator drives panning internally; no per-frame work required.
   }
 
   applyPan(0);

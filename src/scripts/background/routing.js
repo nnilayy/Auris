@@ -1,6 +1,3 @@
-// routing.js (Phase 6)
-// Routes all capture engine events and maintains session storage map aurisGainByTab.
-
 import {
   getStreamIdForTab,
   setStreamIdForTab,
@@ -8,19 +5,18 @@ import {
   noteGlobalClose,
 } from './captureOrchestrator.js';
 
-// Local memo to avoid repeated streamId resolution per tab during a session
 const _streamIdMemoByTab = new Map();
-const _pipelineReadyByStream = new Set(); // streamId that we know are ready
-const _initLocks = new Map(); // streamId -> Promise to serialize init only
-const _fallbackLocksByTab = new Map(); // tabId -> Promise for fallback recovery
+const _pipelineReadyByStream = new Set();
+const _initLocks = new Map();
+const _fallbackLocksByTab = new Map();
 let _lastGlobalCloseTs = 0;
+
 chrome.tabs?.onRemoved?.addListener?.((tabId) => {
   try {
     _streamIdMemoByTab.delete(tabId);
   } catch {}
 });
 
-// Offscreen creation aligned with reference pattern (fast path after first setup)
 let creatingOffscreen = null;
 let offscreenReady = false;
 async function ensureOffscreenDocument() {
@@ -48,7 +44,6 @@ async function ensureOffscreenDocument() {
         reasons: [reason],
         justification: 'Run WebAudio processing for tab capture and DSP.',
       });
-      // Give the offscreen page a brief moment to attach listeners (only on first create)
       await new Promise((r) => setTimeout(r, 50));
       offscreenReady = true;
     } catch (e) {
@@ -72,7 +67,6 @@ async function forwardToOffscreen(payload) {
   });
 }
 
-// Maintain per-tab normalized gain (1.0 => 100%).
 async function setGainForTabNormalized(tabId, normalized) {
   if (typeof normalized !== 'number') {
     return;
@@ -84,7 +78,6 @@ async function setGainForTabNormalized(tabId, normalized) {
   await chrome.storage.session.set({ [key]: map });
 }
 
-// Maintain per-tab gain from percent volumeBoost (100..800 => 1.0..8.0)
 async function setGainForTabPercent(tabId, percent) {
   if (typeof percent !== 'number') {
     return;
@@ -97,7 +90,6 @@ export async function routeMessage(message, sender, sendResponse) {
     return;
   }
 
-  // Direct pass-through if explicitly targeted to offscreen already
   if (message.target === 'offscreen') {
     const result = await forwardToOffscreen(message);
     if (sendResponse) {
@@ -113,7 +105,6 @@ export async function routeMessage(message, sender, sendResponse) {
     'updateControls',
     'toggleEffect',
     'updateEffectParams',
-    'requestStatus',
   ]);
 
   if (captureEvents.has(message.event)) {
@@ -125,7 +116,6 @@ export async function routeMessage(message, sender, sendResponse) {
         throw new Error('Missing tabId for capture event');
       }
 
-      // Helpers to resolve/refresh streamId
       async function resolveStreamId() {
         if (_streamIdMemoByTab.has(tabId)) {
           return _streamIdMemoByTab.get(tabId);
@@ -137,7 +127,6 @@ export async function routeMessage(message, sender, sendResponse) {
         } catch (e) {
           const msg = String((e && e.message) || e || '');
           if (/active\s*stream/i.test(msg) || /Cannot capture a tab/i.test(msg)) {
-            // Ask offscreen to resolve the current active streamId from its pipelines
             const resp = await forwardToOffscreen({
               target: 'offscreen',
               event: 'resolveActiveStreamId',
@@ -150,16 +139,13 @@ export async function routeMessage(message, sender, sendResponse) {
               _streamIdMemoByTab.set(tabId, resp.streamId);
               return resp.streamId;
             }
-            // Last resort: release captures and retry once with cooldown + single-flight per tab
             let lock = _fallbackLocksByTab.get(tabId);
             if (!lock) {
               lock = (async () => {
                 await forwardToOffscreen({ target: 'offscreen', event: 'closeAllContexts', data: {} });
                 noteGlobalClose();
                 _lastGlobalCloseTs = Date.now();
-                // Invalidate memo for all tabs (pipelines were closed)
                 _streamIdMemoByTab.clear();
-                // Cooldown: wait up to 250ms (adaptive if we just recently closed)
                 await new Promise((r) => setTimeout(r, 200));
               })().finally(() => _fallbackLocksByTab.delete(tabId));
               _fallbackLocksByTab.set(tabId, lock);
@@ -174,15 +160,12 @@ export async function routeMessage(message, sender, sendResponse) {
         }
       }
 
-      // Resolve streamId in a reference-like order
       let streamId = _streamIdMemoByTab.get(tabId) || (await getPersistedStreamIdForTab(tabId));
-      // If we very recently closed all contexts, force fresh resolution path once
       if (streamId && Date.now() - _lastGlobalCloseTs < 250) {
         _streamIdMemoByTab.delete(tabId);
         streamId = undefined;
       }
       if (!streamId) {
-        // Try offscreen active first
         const active = await forwardToOffscreen({
           target: 'offscreen',
           event: 'resolveActiveStreamId',
@@ -195,7 +178,6 @@ export async function routeMessage(message, sender, sendResponse) {
           } catch {}
           _streamIdMemoByTab.set(tabId, streamId);
         } else {
-          // Last, and only now, get a new media stream id
           streamId = await resolveStreamId();
           _streamIdMemoByTab.set(tabId, streamId);
         }
@@ -208,9 +190,7 @@ export async function routeMessage(message, sender, sendResponse) {
         'updateEffectParams',
       ]);
       if (requiresPipeline.has(message.event)) {
-        // Fast path: if we already know it's ready, skip init
         if (!_pipelineReadyByStream.has(streamId)) {
-          // Ask offscreen if it's ready; if not, init it with single-flight per stream
           const status = await forwardToOffscreen({
             target: 'offscreen',
             event: 'hasPipeline',
@@ -228,7 +208,6 @@ export async function routeMessage(message, sender, sendResponse) {
                 if (!(initResp && initResp.ok)) {
                   const err = String((initResp && initResp.error) || '');
                   if (/active\s*stream/i.test(err) || /Cannot capture a tab/i.test(err)) {
-                    // Wait briefly for inflight init in offscreen
                     let retries = 5;
                     while (retries-- > 0) {
                       await new Promise((r) => setTimeout(r, 60));
@@ -258,7 +237,6 @@ export async function routeMessage(message, sender, sendResponse) {
         }
       }
 
-      // Build payload for the target event
       const data = { streamId };
       if (message.settings) {
         data.settings = message.settings;
@@ -285,7 +263,6 @@ export async function routeMessage(message, sender, sendResponse) {
         data,
       });
 
-      // Maintain gain map on relevant mutations
       if (message.event === 'applySettings') {
         if (message.settings) {
           const { volumeBoost, gain } = message.settings;
@@ -302,15 +279,8 @@ export async function routeMessage(message, sender, sendResponse) {
         }
       }
 
-      // requestStatus returns minimal info for popup pill
-      if (message.event === 'requestStatus') {
-        if (sendResponse) {
-          sendResponse({ ok: true, streamId, status: offscreenResp });
-        }
-      } else {
-        if (sendResponse) {
-          sendResponse({ ok: true, streamId, offscreen: offscreenResp });
-        }
+      if (sendResponse) {
+        sendResponse({ ok: true, streamId, offscreen: offscreenResp });
       }
     } catch (e) {
       console.error('[Auris Routing] capture event error:', e);

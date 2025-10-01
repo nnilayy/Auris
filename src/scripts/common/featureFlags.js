@@ -1,12 +1,8 @@
-// Feature Flags for Auris engine modes
-// Default engineMode is 'capture'. Accessors minimize refactors.
-
 const ENGINE_MODES = Object.freeze({
   legacy: 'legacy',
   capture: 'capture',
 });
 
-// Internal mutable state (can be persisted later if needed)
 let currentEngineMode = ENGINE_MODES.capture;
 
 export function getEngineMode() {
@@ -28,5 +24,3 @@ export function isCaptureEnabled() {
 export function listEngineModes() {
   return { ...ENGINE_MODES };
 }
-
-// Future TODO (Phase 6): Persist selected mode in chrome.storage.local if user toggle retained.

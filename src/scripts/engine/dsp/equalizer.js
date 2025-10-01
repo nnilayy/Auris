@@ -1,6 +1,3 @@
-// equalizer.js (Phase 3)
-// 10-band equalizer factory and update helpers.
-
 const FREQUENCIES = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
 export function createEQ(context) {
@@ -10,11 +7,10 @@ export function createEQ(context) {
     f.frequency.value = freq;
     f.gain.value = 0;
     if (f.type === 'peaking') {
-      f.Q.value = 1.1; // moderate width
+      f.Q.value = 1.1;
     }
     return f;
   });
-  // Chain them in series
   for (let i = 0; i < filters.length - 1; i++) {
     filters[i].connect(filters[i + 1]);
   }

@@ -1,6 +1,3 @@
-// scheduler.js (Phase 5)
-// Lightweight frame scheduler using setInterval for effect animation (8D orbit).
-
 export function createScheduler() {
   let lastTs = performance.now();
   let intervalId = null;
@@ -31,7 +28,7 @@ export function createScheduler() {
       return;
     }
     lastTs = performance.now();
-    intervalId = setInterval(tick, 50); // 20 FPS adequate for audio panner motion
+    intervalId = setInterval(tick, 50);
   }
 
   function stop() {

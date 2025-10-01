@@ -1,6 +1,3 @@
-// protocol.js (Phase 5)
-// Adds effect toggle & params events.
-
 export const EVENTS = Object.freeze([
   'initPipeline',
   'applySettings',
@@ -8,7 +5,6 @@ export const EVENTS = Object.freeze([
   'updateControls',
   'toggleEffect',
   'updateEffectParams',
-  'requestStatus',
   'closeContext',
   'resolveActiveStreamId',
   'hasPipeline',

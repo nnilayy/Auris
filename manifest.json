@@ -3,7 +3,7 @@
   "name": "Auris",
   "version": "1.0.0",
   "description": "Advanced audio equalizer with 8D audio, echo effects, volume boost, bass boost, and surround sound controls",
-  "permissions": ["activeTab", "storage", "tabCapture", "offscreen"],
+  "permissions": ["activeTab", "storage", "tabCapture", "offscreen", "tabs"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },

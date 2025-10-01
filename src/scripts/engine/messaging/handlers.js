@@ -1,6 +1,3 @@
-// handlers.js (Phase 2)
-// Simple registry pattern for offscreen messaging.
-
 import { isValidEvent } from './protocol.js';
 import { initEngineMessaging } from '../core/engineBootstrap.js';
 

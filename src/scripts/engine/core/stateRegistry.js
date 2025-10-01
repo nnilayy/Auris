@@ -1,6 +1,3 @@
-// stateRegistry.js (Phase 2)
-// Maintains mapping from streamId to pipeline objects.
-
 const pipelines = new Map();
 
 export function safeCloseContext(pipeline) {
@@ -11,7 +8,6 @@ export function safeCloseContext(pipeline) {
       pipeline.context.close();
     }
   } catch {
-    /* ignore */
   }
   pipeline._closed = true;
 }
@@ -32,7 +28,7 @@ export function hasPipeline(streamId) {
 export function deletePipeline(streamId) {
   const p = pipelines.get(streamId);
   if (p) {
-    safeCloseContext(p); // idempotent
+    safeCloseContext(p);
   }
   pipelines.delete(streamId);
 }

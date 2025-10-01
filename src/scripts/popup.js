@@ -1,12 +1,6 @@
-// Popup script for Auris Audio Equalizer
 class AurisPopup {
   constructor() {
-    // Phase 0 (Migration Scaffold): feature flag logging – no functional change.
-    // Engine mode: using 'capture' pipeline by default.
-    // TODO: Replace multi-state status logic with binary pill:
-    //   - "Audio Detected" / "No Audio Detected" driven by capture analyser.
     try {
-      // Dynamically import feature flag module if present (defensive in case of partial deploy)
       import('../scripts/common/featureFlags.js')
         .then((mod) => {
           try {
@@ -17,7 +11,6 @@ class AurisPopup {
           }
         })
         .catch((err) => {
-          // Non-fatal: feature flags not yet deployed
           console.debug(
             '[Auris Popup] Feature flags module not available (expected in Phase 0):',
             err?.message
@@ -27,15 +20,13 @@ class AurisPopup {
       console.debug('[Auris Popup] Inline engine mode check failed:', e);
     }
     try {
-      // Initialize debounce timeouts first
       this.volumeUpdateTimeout = null;
       this.bassUpdateTimeout = null;
       this.voiceUpdateTimeout = null;
       this._captureStatusInterval = null;
-      this._lastStatus = null;
-      this._statusStableCount = 0;
+      this._initialCaptureApplied = false;
 
-      // Initialize popup components
+
       this.initializeElements();
       this.bindEvents();
       this.loadTheme();
@@ -44,10 +35,8 @@ class AurisPopup {
       import('../scripts/common/featureFlags.js').then((mod) => {
         const capture = mod.isCaptureEnabled && mod.isCaptureEnabled();
         if (capture) {
-          // Skip content-script handshake
           this.initializeCaptureModeUI();
         } else {
-          // Behavior retained until full removal
           setTimeout(() => {
             this.testContentScriptConnection();
             this.checkAudioStatus();
@@ -61,7 +50,6 @@ class AurisPopup {
       this.handleCriticalError('Popup failed to initialize');
     }
 
-    // Presets configuration
     this.presets = {
       flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       rock: [4, 2, -2, -1, 0, 1, 3, 4, 4, 4],
@@ -75,7 +63,6 @@ class AurisPopup {
       'treble-boost': [-2, -1, 0, 1, 2, 3, 4, 5, 6, 6],
     };
 
-    // Default values for checking if reset is needed
     this.defaults = {
       equalizer: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       audio: {
@@ -86,18 +73,18 @@ class AurisPopup {
       effects: {
         audio8dSpeed: 3,
         surroundDepth: 50,
+        echoDelay: 250,
+        echoFeedback: 30,
         audio8dActive: false,
         surroundActive: false,
         echoActive: false,
       },
     };
 
-    // Phase 2: If engineMode switched manually to capture, send initial applySettings (gain-only)
     import('../scripts/common/featureFlags.js')
       .then((mod) => {
         if (mod.isCaptureEnabled && mod.isCaptureEnabled()) {
-          // Map volume percent to normalized gain (basic placeholder)
-          const volPercent = this.defaults.audio.volume; // actual loaded settings may override later
+          const volPercent = this.defaults.audio.volume;
           const gain = Math.max(0, volPercent / 100);
           this._sendCaptureApplySettings({ gain });
         }
@@ -107,7 +94,6 @@ class AurisPopup {
       });
   }
 
-  // Phase 2 helper: capture-mode apply settings dispatcher
   _sendCaptureApplySettings(payload) {
     try {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -137,7 +123,6 @@ class AurisPopup {
 
   initializeElements() {
     try {
-      // Equalizer sliders
       this.eqSliders = [
         document.getElementById('eq-32'),
         document.getElementById('eq-64'),
@@ -151,34 +136,29 @@ class AurisPopup {
         document.getElementById('eq-16k'),
       ];
 
-      // Control sliders
       this.volumeSlider = document.getElementById('volume-boost');
       this.bassSlider = document.getElementById('bass-boost');
       this.voiceSlider = document.getElementById('voice-boost');
 
-      // Effect control sliders
       this.audio8dSpeedSlider = document.getElementById('8d-speed');
       this.surroundDepthSlider = document.getElementById('surround-depth');
+      this.echoDelaySlider = document.getElementById('echo-delay');
+      this.echoFeedbackSlider = document.getElementById('echo-feedback');
 
-      // Value displays
       this.volumeValue = document.getElementById('volume-value');
       this.bassValue = document.getElementById('bass-value');
       this.voiceValue = document.getElementById('voice-value');
       this.audio8dSpeedValue = document.getElementById('8d-speed-value');
       this.surroundDepthValue = document.getElementById('surround-depth-value');
+      this.echoDelayValue = document.getElementById('echo-delay-value');
+      this.echoFeedbackValue = document.getElementById('echo-feedback-value');
 
-      // Toggle buttons
       this.audio8dToggle = document.getElementById('8d-toggle');
       this.surroundToggle = document.getElementById('surround-toggle');
       this.echoToggle = document.getElementById('echo-toggle');
 
-      // Preset selector
       this.presetSelect = document.getElementById('preset-select');
-
-      // Status indicator
       this.statusElement = document.getElementById('status');
-
-      // Sidebar elements
       this.settingsToggle = document.getElementById('settings-toggle');
       this.sidebar = document.getElementById('sidebar');
       this.sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -188,7 +168,6 @@ class AurisPopup {
       this.leaveReviewBtn = document.getElementById('leave-review');
       this.reportIssueBtn = document.getElementById('report-issue');
 
-      // Check for critical missing elements
       const criticalElements = [
         { element: this.volumeSlider, name: 'volume-boost' },
         { element: this.bassSlider, name: 'bass-boost' },
@@ -202,14 +181,12 @@ class AurisPopup {
         throw new Error(`Critical elements missing: ${missingNames}`);
       }
 
-      // Check EQ sliders
       const missingEqSliders = this.eqSliders.filter((slider) => !slider).length;
       if (missingEqSliders > 0) {
         console.warn(`Auris: ${missingEqSliders} EQ slider elements missing`);
       }
 
       console.log('Auris: All elements initialized successfully');
-      // Active tabs elements
       this.activeTabsBtn = document.getElementById('active-tabs-btn');
       this.tabsSidebar = document.getElementById('tabs-sidebar');
       this.tabsSidebarOverlay = document.getElementById('tabs-sidebar-overlay');
@@ -234,20 +211,22 @@ class AurisPopup {
     if (this._captureStatusInterval) {
       return;
     }
-    this._captureStatusInterval = setInterval(() => this.pollCaptureStatus(), 2000);
+    this._captureStatusInterval = setInterval(() => this.pollCaptureStatus(), 1000);
   }
 
   pollCaptureStatus() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs && tabs[0];
-      if (!tab) {
-        return;
-      }
-      chrome.runtime.sendMessage({ event: 'requestStatus', tabId: tab.id }, (resp) => {
-        const audioActive = resp?.status?.result?.audioActive || resp?.status?.audioActive;
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs && tabs[0];
+        if (!tab) {
+          return;
+        }
+        const audioActive = !!tab.audible;
         this.updateBinaryStatus(audioActive);
       });
-    });
+    } catch (e) {
+      console.warn('[Auris Popup] pollCaptureStatus audible check failed:', e);
+    }
   }
 
   updateBinaryStatus(audioActive) {
@@ -255,110 +234,72 @@ class AurisPopup {
       return;
     }
     const newLabel = audioActive ? 'Audio Detected' : 'No Audio Detected';
-    if (this._lastStatus === newLabel) {
-      this._statusStableCount++;
-    } else {
-      this._statusStableCount = 0;
-    }
-    this._lastStatus = newLabel;
-    // Require 1 stable confirmation (2 consecutive identical readings) to flip text
-    if (this._statusStableCount >= 1 || !this.statusElement.textContent) {
-      this.statusElement.textContent = newLabel;
-      this.statusElement.classList.toggle('inactive', !audioActive);
-      this.statusElement.classList.toggle('active', audioActive);
-    }
+    this.statusElement.textContent = newLabel;
+    this.statusElement.classList.toggle('inactive', !audioActive);
+    this.statusElement.classList.toggle('active', audioActive);
   }
 
   subscribeActiveTabsChanges() {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'session' && changes.aurisGainByTab) {
-        this.renderActiveTabs(changes.aurisGainByTab.newValue);
+      if (area === 'session' && changes.aurisAudibleTabs) {
+        const val = changes.aurisAudibleTabs.newValue;
+        this.renderActiveTabs(val && val.tabs ? val.tabs : []);
       }
     });
   }
 
-  async renderActiveTabs(mapOverride) {
-    if (!this.activeTabsList) {
-      return;
+  async renderActiveTabs(audibleArray) {
+    if (!this.activeTabsList) return;
+    let list = audibleArray;
+    if (!Array.isArray(list)) {
+      const data = await chrome.storage.session.get('aurisAudibleTabs');
+      list = (data.aurisAudibleTabs && data.aurisAudibleTabs.tabs) || [];
     }
-    let map = mapOverride;
-    if (!map) {
-      const data = await chrome.storage.session.get('aurisGainByTab');
-      map = data.aurisGainByTab || {};
-    }
-    const entries = Object.entries(map);
     this.activeTabsList.innerHTML = '';
-    if (entries.length === 0) {
+    if (list.length === 0) {
       const li = document.createElement('li');
       li.className = 'empty';
-      li.textContent = 'No tabs yet';
+      li.textContent = 'No active audio';
       this.activeTabsList.appendChild(li);
       return;
     }
-    // Sort by tabId numeric for stability
-    entries.sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10));
-
-    // Fetch tab title + favicon for each entry and render nicely
-    const fetchTab = (id) =>
-      new Promise((resolve) => {
-        try {
-          chrome.tabs.get(Number(id), (tab) => {
-            if (chrome.runtime.lastError || !tab) {
-              return resolve({ id, title: `Tab ${id}`, icon: null });
-            }
-            resolve({ id, title: tab.title || `Tab ${id}`, icon: tab.favIconUrl || null });
-          });
-        } catch (_) {
-          resolve({ id, title: `Tab ${id}`, icon: null });
-        }
-      });
-
-    const details = await Promise.all(entries.map(([tabId]) => fetchTab(tabId)));
-
-    details.forEach((info, idx) => {
-      const [tabId, gain] = entries[idx];
-      const pct = Math.round((parseFloat(gain) || 0) * 100);
+    list.forEach((info) => {
+      const tabId = info.id;
+      const title = info.title || `Tab ${tabId}`;
+      const icon = info.icon || '../icons/auris-icon-light-svg-16.png';
+      const safeTitle = title.toString();
       const li = document.createElement('li');
       li.className = 'active-tab-item clickable-tab';
       li.setAttribute('data-tab-id', tabId);
       li.title = 'Click to switch to this tab';
-      const icon = info.icon || '../icons/auris-icon-light-svg-16.png';
-      const safeTitle = (info.title || `Tab ${tabId}`).toString();
       li.innerHTML = `
-                <img class="tab-favicon" src="${icon}" alt="" onerror="this.src='../icons/auris-icon-light-svg-16.png'" />
-                <span class="tab-title" title="${safeTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}">${safeTitle}</span>
-                <span class="tab-pct">${pct}%</span>
-                <button class="tab-close-btn" title="Close tab" data-tab-id="${tabId}">×</button>
-            `;
-      
-      // Add click event listener to switch to tab (but not on close button)
+          <img class="tab-favicon" src="${icon}" alt="" onerror="this.src='../icons/auris-icon-light-svg-16.png'" />
+          <span class="tab-title" title="${safeTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}">${safeTitle}</span>
+          <button class="tab-close-btn" title="Close tab" data-tab-id="${tabId}">×</button>
+        `;
+
       li.addEventListener('click', (e) => {
         if (!e.target.classList.contains('tab-close-btn')) {
           this.switchToTab(parseInt(tabId));
         }
       });
-      
-      // Add close button event listener
       const closeBtn = li.querySelector('.tab-close-btn');
       closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent tab switching
+        e.stopPropagation();
         this.closeTab(parseInt(tabId));
       });
-      
       this.activeTabsList.appendChild(li);
     });
   }
 
   switchToTab(tabId) {
     try {
-      // Switch to the tab and bring its window to front
       chrome.tabs.update(tabId, { active: true }, (tab) => {
         if (chrome.runtime.lastError) {
           console.error('Error switching to tab:', chrome.runtime.lastError.message);
           return;
         }
         
-        // Also focus the window containing the tab
         if (tab && tab.windowId) {
           chrome.windows.update(tab.windowId, { focused: true }, (window) => {
             if (chrome.runtime.lastError) {
@@ -367,7 +308,6 @@ class AurisPopup {
           });
         }
         
-        // Close the sidebar after switching
         this.closeTabsSidebar();
       });
     } catch (error) {
@@ -383,7 +323,6 @@ class AurisPopup {
           return;
         }
         
-        // Refresh the active tabs list after closing
         this.renderActiveTabs();
       });
     } catch (error) {
@@ -393,7 +332,6 @@ class AurisPopup {
 
   bindEvents() {
     try {
-      // Equalizer events - direct updates for immediate audio feedback
       this.eqSliders.forEach((slider, index) => {
         if (slider) {
           slider.addEventListener('input', () => {
@@ -411,13 +349,10 @@ class AurisPopup {
         }
       });
 
-      // Control slider events - INSTANT UPDATES like EQ sliders
       this.volumeSlider.addEventListener('input', () => {
         this.volumeValue.textContent = this.volumeSlider.value + '%';
         this.updateSliderProgress(this.volumeSlider);
-        // INSTANT audio update
         this.updateAudioSettings();
-        // Debounced save to prevent excessive storage writes
         clearTimeout(this.volumeUpdateTimeout);
         this.volumeUpdateTimeout = setTimeout(() => {
           this.saveSettings();
@@ -427,9 +362,7 @@ class AurisPopup {
       this.bassSlider.addEventListener('input', () => {
         this.bassValue.textContent = this.bassSlider.value + 'dB';
         this.updateSliderProgress(this.bassSlider);
-        // INSTANT audio update
         this.updateAudioSettings();
-        // Debounced save to prevent excessive storage writes
         clearTimeout(this.bassUpdateTimeout);
         this.bassUpdateTimeout = setTimeout(() => {
           this.saveSettings();
@@ -439,16 +372,13 @@ class AurisPopup {
       this.voiceSlider.addEventListener('input', () => {
         this.voiceValue.textContent = this.voiceSlider.value + 'dB';
         this.updateSliderProgress(this.voiceSlider);
-        // INSTANT audio update
         this.updateAudioSettings();
-        // Debounced save to prevent excessive storage writes
         clearTimeout(this.voiceUpdateTimeout);
         this.voiceUpdateTimeout = setTimeout(() => {
           this.saveSettings();
         }, 200);
       });
 
-      // Effect control sliders
       this.audio8dSpeedSlider.addEventListener('input', () => {
         this.audio8dSpeedValue.textContent = this.audio8dSpeedSlider.value + 's';
         this.updateSliderProgress(this.audio8dSpeedSlider);
@@ -463,7 +393,20 @@ class AurisPopup {
         this.saveSettings();
       });
 
-      // Toggle button events
+      this.echoDelaySlider.addEventListener('input', () => {
+        this.echoDelayValue.textContent = this.echoDelaySlider.value + 'ms';
+        this.updateSliderProgress(this.echoDelaySlider);
+        this.updateEffectSettings();
+        this.saveSettings();
+      });
+
+      this.echoFeedbackSlider.addEventListener('input', () => {
+        this.echoFeedbackValue.textContent = this.echoFeedbackSlider.value + '%';
+        this.updateSliderProgress(this.echoFeedbackSlider);
+        this.updateEffectSettings();
+        this.saveSettings();
+      });
+
       this.audio8dToggle.addEventListener('click', () => {
         this.toggle8dAudio();
       });
@@ -476,15 +419,11 @@ class AurisPopup {
         this.toggleEcho();
       });
 
-      // Preset selection
       this.presetSelect.addEventListener('change', () => {
         this.applyPreset(this.presetSelect.value);
       });
 
-      // Initialize custom dropdown functionality
       this.initializeCustomDropdown();
-
-      // Reset button events
       document.getElementById('reset-eq').addEventListener('click', () => {
         this.resetEqualizer();
       });
@@ -497,7 +436,7 @@ class AurisPopup {
         this.resetEffects();
       });
 
-      // Section navigation
+      this.setupResetButtonEffects();
       document.getElementById('nav-equalizer').addEventListener('click', () => {
         this.showSection('equalizer');
       });
@@ -510,7 +449,6 @@ class AurisPopup {
         this.showSection('effects');
       });
 
-      // Sidebar toggle
       if (this.settingsToggle) {
         this.settingsToggle.addEventListener('click', () => {
           try {
@@ -521,21 +459,17 @@ class AurisPopup {
         });
       }
 
-      // Sidebar close
       if (this.sidebarClose) {
         this.sidebarClose.addEventListener('click', () => {
           this.closeSidebar();
         });
       }
-
-      // Sidebar overlay
       if (this.sidebarOverlay) {
         this.sidebarOverlay.addEventListener('click', () => {
           this.closeSidebar();
         });
       }
 
-      // Theme toggle
       if (this.themeToggle) {
         this.themeToggle.addEventListener('click', () => {
           try {
@@ -545,8 +479,6 @@ class AurisPopup {
           }
         });
       }
-
-      // Feedback buttons
       if (this.leaveReviewBtn) {
         this.leaveReviewBtn.addEventListener('click', () => {
           this.openReviewLink();
@@ -559,7 +491,6 @@ class AurisPopup {
         });
       }
 
-      // Active tabs sidebar events
       if (this.activeTabsBtn) {
         this.activeTabsBtn.addEventListener('click', () => {
           this.openTabsSidebar();
@@ -578,7 +509,6 @@ class AurisPopup {
         });
       }
 
-      // Keyboard support for sidebars
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           if (this.sidebar?.classList.contains('active')) {
@@ -590,7 +520,6 @@ class AurisPopup {
         }
       });
 
-      // Initialize slider progress
       this.initializeSliderProgress();
 
       console.log('Auris: All events bound successfully');
@@ -600,7 +529,6 @@ class AurisPopup {
     }
   }
 
-  // Update slider progress fill
   updateSliderProgress(slider) {
     const value = parseFloat(slider.value);
     const min = parseFloat(slider.min);
@@ -608,32 +536,28 @@ class AurisPopup {
     const percentage = ((value - min) / (max - min)) * 100;
     slider.style.setProperty('--slider-progress', `${percentage}%`);
 
-    // Add visual feedback for EQ sliders when value is non-zero
     if (slider.parentElement && slider.parentElement.classList.contains('equalizer')) {
-      // For EQ sliders, mark as active if value is not 0 (considering float precision)
       const isActive = Math.abs(value) > 0.1;
       slider.setAttribute('data-active', isActive.toString());
     }
   }
 
-  // Initialize all slider progress on load
   initializeSliderProgress() {
-    // Initialize EQ sliders progress
     this.eqSliders.forEach((slider) => {
       if (slider) {
         this.updateSliderProgress(slider);
       }
     });
 
-    // Initialize control sliders progress
     this.updateSliderProgress(this.volumeSlider);
     this.updateSliderProgress(this.bassSlider);
     this.updateSliderProgress(this.voiceSlider);
     this.updateSliderProgress(this.audio8dSpeedSlider);
     this.updateSliderProgress(this.surroundDepthSlider);
+    this.updateSliderProgress(this.echoDelaySlider);
+    this.updateSliderProgress(this.echoFeedbackSlider);
   }
 
-  // Check if equalizer values have changed from defaults
   checkEqualizerReset() {
     const currentValues = this.eqSliders.map((slider) => parseFloat(slider.value));
     const hasChanged = currentValues.some(
@@ -643,7 +567,6 @@ class AurisPopup {
     resetBtn.classList.toggle('active', hasChanged);
   }
 
-  // Check if audio control values have changed from defaults
   checkAudioReset() {
     const hasChanged =
       parseFloat(this.volumeSlider.value) !== this.defaults.audio.volume ||
@@ -654,11 +577,12 @@ class AurisPopup {
     resetBtn.classList.toggle('active', hasChanged);
   }
 
-  // Check if effects values have changed from defaults
   checkEffectsReset() {
     const hasChanged =
       parseFloat(this.audio8dSpeedSlider.value) !== this.defaults.effects.audio8dSpeed ||
       parseFloat(this.surroundDepthSlider.value) !== this.defaults.effects.surroundDepth ||
+      parseFloat(this.echoDelaySlider.value) !== this.defaults.effects.echoDelay ||
+      parseFloat(this.echoFeedbackSlider.value) !== this.defaults.effects.echoFeedback ||
       this.audio8dToggle.classList.contains('active') !== this.defaults.effects.audio8dActive ||
       this.surroundToggle.classList.contains('active') !== this.defaults.effects.surroundActive ||
       this.echoToggle.classList.contains('active') !== this.defaults.effects.echoActive;
@@ -667,9 +591,7 @@ class AurisPopup {
     resetBtn.classList.toggle('active', hasChanged);
   }
 
-  // Sidebar methods
   openSidebar() {
-    // Close any open dropdown first
     if (this.toggleCustomDropdown) {
       this.toggleCustomDropdown(false);
     }
@@ -679,7 +601,6 @@ class AurisPopup {
       this.sidebarOverlay.classList.add('active');
       document.body.style.overflow = 'hidden';
       
-      // Rotate settings cog
       if (this.settingsToggle) {
         this.settingsToggle.classList.add('active');
       }
@@ -692,16 +613,13 @@ class AurisPopup {
       this.sidebarOverlay.classList.remove('active');
       document.body.style.overflow = '';
       
-      // Rotate settings cog back to normal
       if (this.settingsToggle) {
         this.settingsToggle.classList.remove('active');
       }
     }
   }
 
-  // Tabs sidebar methods
   openTabsSidebar() {
-    // Close any open dropdown first
     if (this.toggleCustomDropdown) {
       this.toggleCustomDropdown(false);
     }
@@ -721,17 +639,14 @@ class AurisPopup {
     }
   }
 
-  // Theme methods
   toggleTheme() {
     const body = document.body;
     const isLight = body.classList.contains('light-theme');
 
     if (isLight) {
-      // Switch to dark
       body.classList.remove('light-theme');
       localStorage.setItem('auris-theme', 'dark');
     } else {
-      // Switch to light
       body.classList.add('light-theme');
       localStorage.setItem('auris-theme', 'light');
     }
@@ -754,29 +669,24 @@ class AurisPopup {
     }
   }
 
-  // External link methods
   openReviewLink() {
-    // Placeholder URL for Chrome Web Store reviews
-    // Replace with actual Chrome Web Store URL when published
     const reviewUrl = 'https://chromewebstore.google.com/detail/auris-audio-equalizer/placeholder-id/reviews';
     chrome.tabs.create({ url: reviewUrl });
   }
 
   openIssueLink() {
-    // GitHub new issue URL
     const issueUrl = 'https://github.com/nnilayy/Auris/issues/new';
     chrome.tabs.create({ url: issueUrl });
   }
 
   updateEqualizer() {
     const eqValues = this.eqSliders.map((slider) => parseFloat(slider.value));
-    // Previous path
     this.sendMessageToContent({ type: 'updateEqualizer', values: eqValues });
 
-    // Capture path (Phase 3): send updateEQ event
     import('../scripts/common/featureFlags.js')
       .then((mod) => {
         if (mod.isCaptureEnabled && mod.isCaptureEnabled()) {
+          if (!this._initialCaptureApplied) { return; }
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs && tabs[0];
             if (!tab) {
@@ -786,12 +696,11 @@ class AurisPopup {
               {
                 event: 'updateEQ',
                 tabId: tab.id,
-                settings: undefined, // not needed here
+                settings: undefined,
                 eq: eqValues,
               },
               (resp) => {
                 if (resp && resp.ok) {
-                  // optional debug log
                 } else if (resp && resp.error) {
                   console.warn('[Auris Popup][Capture] updateEQ error', resp.error);
                 }
@@ -819,6 +728,7 @@ class AurisPopup {
     import('../scripts/common/featureFlags.js')
       .then((mod) => {
         if (mod.isCaptureEnabled && mod.isCaptureEnabled()) {
+          if (!this._initialCaptureApplied) { return; }
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs && tabs[0];
             if (!tab) {
@@ -847,6 +757,8 @@ class AurisPopup {
     const effectSettings = {
       audio8dSpeed: parseFloat(this.audio8dSpeedSlider.value),
       surroundDepth: parseFloat(this.surroundDepthSlider.value),
+      echoDelay: parseFloat(this.echoDelaySlider.value),
+      echoFeedback: parseFloat(this.echoFeedbackSlider.value),
     };
 
     this.sendMessageToContent({
@@ -857,6 +769,7 @@ class AurisPopup {
     import('../scripts/common/featureFlags.js')
       .then((mod) => {
         if (mod.isCaptureEnabled && mod.isCaptureEnabled()) {
+          if (!this._initialCaptureApplied) { return; }
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs && tabs[0];
             if (!tab) {
@@ -970,6 +883,8 @@ class AurisPopup {
       const values = this.presets[presetName];
       this.eqSliders.forEach((slider, index) => {
         slider.value = values[index];
+        // Update slider progress to make sure the trail follows the new value
+        this.updateSliderProgress(slider);
       });
       this.updateEqualizer();
       this.saveSettings();
@@ -1174,6 +1089,8 @@ class AurisPopup {
         echo: this.echoToggle.classList.contains('active'),
         audio8dSpeed: parseFloat(this.audio8dSpeedSlider.value),
         surroundDepth: parseFloat(this.surroundDepthSlider.value),
+        echoDelay: parseFloat(this.echoDelaySlider.value),
+        echoFeedback: parseFloat(this.echoFeedbackSlider.value),
         preset: this.presetSelect.value,
       };
 
@@ -1202,6 +1119,8 @@ class AurisPopup {
         this.voiceSlider.value = settings.voiceBoost || 0;
         this.audio8dSpeedSlider.value = settings.audio8dSpeed || 3;
         this.surroundDepthSlider.value = settings.surroundDepth || 50;
+        this.echoDelaySlider.value = settings.echoDelay || 250;
+        this.echoFeedbackSlider.value = settings.echoFeedback || 30;
 
         // Update value displays
         this.volumeValue.textContent = this.volumeSlider.value + '%';
@@ -1209,6 +1128,8 @@ class AurisPopup {
         this.voiceValue.textContent = this.voiceSlider.value + 'dB';
         this.audio8dSpeedValue.textContent = this.audio8dSpeedSlider.value + 's';
         this.surroundDepthValue.textContent = this.surroundDepthSlider.value + '%';
+        this.echoDelayValue.textContent = this.echoDelaySlider.value + 'ms';
+        this.echoFeedbackValue.textContent = this.echoFeedbackSlider.value + '%';
 
         // Update slider progress
         this.initializeSliderProgress();
@@ -1229,46 +1150,76 @@ class AurisPopup {
           this.presetSelect.value = settings.preset;
         }
 
-        // Apply settings
-        this.updateEqualizer();
-        this.updateAudioSettings();
-        this.updateEffectSettings();
+        // Consolidated initial apply for capture mode
+        import('../scripts/common/featureFlags.js')
+          .then((mod) => {
+            if (mod.isCaptureEnabled && mod.isCaptureEnabled()) {
+              chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                const tab = tabs && tabs[0];
+                if (!tab) { return; }
+                const eqArray = this.eqSliders.map((s) => parseFloat(s.value));
+                const volumeBoost = parseFloat(this.volumeSlider.value) || 100;
+                const bassBoost = parseFloat(this.bassSlider.value) || 0;
+                const voiceBoost = parseFloat(this.voiceSlider.value) || 0;
+                const gain = Math.max(0, volumeBoost / 100);
+                chrome.runtime.sendMessage({
+                  event: 'applySettings',
+                  tabId: tab.id,
+                  settings: { gain, volumeBoost, bassBoost, voiceBoost, eq: eqArray },
+                }, () => {
+                  this._initialCaptureApplied = true;
+                  if (this.audio8dToggle.classList.contains('active')) {
+                    chrome.runtime.sendMessage({ event: 'toggleEffect', tabId: tab.id, name: 'audio8d', active: true });
+                    chrome.runtime.sendMessage({ event: 'updateEffectParams', tabId: tab.id, name: 'audio8d', params: { speed: parseFloat(this.audio8dSpeedSlider.value) } });
+                  }
+                  if (this.surroundToggle.classList.contains('active')) {
+                    chrome.runtime.sendMessage({ event: 'toggleEffect', tabId: tab.id, name: 'surround', active: true });
+                    chrome.runtime.sendMessage({ event: 'updateEffectParams', tabId: tab.id, name: 'surround', params: { depth: parseFloat(this.surroundDepthSlider.value) } });
+                  }
+                  if (this.echoToggle.classList.contains('active')) {
+                    chrome.runtime.sendMessage({ event: 'toggleEffect', tabId: tab.id, name: 'echo', active: true });
+                    chrome.runtime.sendMessage({ event: 'updateEffectParams', tabId: tab.id, name: 'echo', params: { delay: parseFloat(this.echoDelaySlider.value) / 1000, feedback: parseFloat(this.echoFeedbackSlider.value) / 100, wet: 0.5 } });
+                  }
+                });
+              });
+            } else {
+              this.updateEqualizer();
+              this.updateAudioSettings();
+              this.updateEffectSettings();
+            }
+          })
+          .catch(() => {
+            this.updateEqualizer();
+            this.updateAudioSettings();
+            this.updateEffectSettings();
+          });
 
-        // Send toggle states to content script
-        if (settings.audio8d) {
-          this.sendMessageToContent({
-            type: 'toggle8dAudio',
-            enabled: true,
-          });
-        }
-        if (settings.surround) {
-          this.sendMessageToContent({
-            type: 'toggleSurroundSound',
-            enabled: true,
-          });
-        }
-        if (settings.echo) {
-          this.sendMessageToContent({
-            type: 'toggleEcho',
-            enabled: true,
-          });
-        }
+        import('../scripts/common/featureFlags.js')
+          .then((mod) => {
+            if (!(mod.isCaptureEnabled && mod.isCaptureEnabled())) {
+              if (settings.audio8d) {
+                this.sendMessageToContent({ type: 'toggle8dAudio', enabled: true });
+              }
+              if (settings.surround) {
+                this.sendMessageToContent({ type: 'toggleSurroundSound', enabled: true });
+              }
+              if (settings.echo) {
+                this.sendMessageToContent({ type: 'toggleEcho', enabled: true });
+              }
+            }
+          })
+          .catch(() => {});
 
-        // Check reset button states after loading
         this.checkEqualizerReset();
         this.checkAudioReset();
         this.checkEffectsReset();
       }
     } catch (error) {
-      // Log settings loading errors for debugging
       console.error('Auris: Failed to load settings from storage:', error);
 
-      // Apply default values and check reset buttons for default state
       this.checkEqualizerReset();
       this.checkAudioReset();
       this.checkEffectsReset();
-
-      // Show warning in status
       if (this.statusElement) {
         this.statusElement.textContent = 'Using default settings';
         this.statusElement.className = 'status warning';
@@ -1277,23 +1228,17 @@ class AurisPopup {
   }
 
   resetEqualizer() {
-    // Reset all EQ sliders to 0
     this.eqSliders.forEach((slider) => {
       slider.value = 0;
-      // Update the progress trail for each slider
       this.updateSliderProgress(slider);
     });
 
-    // Reset preset dropdown to "Flat" (default preset)
     if (this.presetSelect) {
       this.presetSelect.value = 'flat';
       
-      // Update custom dropdown display text
       if (this.customSelectTrigger) {
         this.customSelectTrigger.textContent = 'Flat';
       }
-      
-      // Update selected option styling
       if (this.customSelectOptions) {
         this.customSelectOptions.querySelectorAll('.custom-select-option').forEach((opt) => {
           opt.classList.remove('selected');
@@ -1304,57 +1249,50 @@ class AurisPopup {
       }
     }
 
-    // Apply the reset values
     this.updateEqualizer();
     this.saveSettings();
   }
 
   resetAudioControls() {
-    // Reset audio controls to defaults
     this.volumeSlider.value = 100;
     this.bassSlider.value = 0;
     this.voiceSlider.value = 0;
 
-    // Update value displays
     this.volumeValue.textContent = '100%';
     this.bassValue.textContent = '0dB';
     this.voiceValue.textContent = '0dB';
 
-    // Update slider progress trails
     this.updateSliderProgress(this.volumeSlider);
     this.updateSliderProgress(this.bassSlider);
     this.updateSliderProgress(this.voiceSlider);
 
-    // Apply the reset values
     this.updateAudioSettings();
     this.saveSettings();
   }
 
   resetEffects() {
-    // Reset effect controls to defaults
     this.audio8dSpeedSlider.value = 3;
     this.surroundDepthSlider.value = 50;
+    this.echoDelaySlider.value = 250;
+    this.echoFeedbackSlider.value = 30;
 
-    // Update value displays
     this.audio8dSpeedValue.textContent = '3s';
     this.surroundDepthValue.textContent = '50%';
+    this.echoDelayValue.textContent = '250ms';
+    this.echoFeedbackValue.textContent = '30%';
 
-    // Update slider progress trails
     this.updateSliderProgress(this.audio8dSpeedSlider);
     this.updateSliderProgress(this.surroundDepthSlider);
+    this.updateSliderProgress(this.echoDelaySlider);
+    this.updateSliderProgress(this.echoFeedbackSlider);
 
-    // Turn off effects
     this.audio8dToggle.classList.remove('active');
     this.surroundToggle.classList.remove('active');
     this.echoToggle.classList.remove('active');
 
-    // Reset preset to flat
     this.presetSelect.value = 'flat';
 
-    // Apply the reset values (updates params for 8D speed + surround depth)
     this.updateEffectSettings();
-
-    // Capture path: toggle all effects OFF in the active tab
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs && tabs[0];
       if (!tab) {
@@ -1387,28 +1325,46 @@ class AurisPopup {
     this.saveSettings();
   }
 
+  setupResetButtonEffects() {
+    const resetButtons = ['reset-eq', 'reset-audio', 'reset-effects'];
+    
+    resetButtons.forEach(buttonId => {
+      const button = document.getElementById(buttonId);
+      if (button) {
+        let isPressed = false;
+        
+        button.addEventListener('mousedown', (e) => {
+          if (button.classList.contains('active')) {
+            isPressed = true;
+          }
+        });
+        
+        button.addEventListener('mouseup', (e) => {
+          isPressed = false;
+        });
+        
+        button.addEventListener('mouseleave', (e) => {
+          isPressed = false;
+        });
+      }
+    });
+  }
+
   showSection(sectionName) {
-    // Hide all sections
     document.querySelectorAll('.section-content').forEach((section) => {
       section.classList.add('hidden');
     });
 
-    // Remove active class from all nav buttons
     document.querySelectorAll('.nav-btn').forEach((btn) => {
       btn.classList.remove('active');
     });
 
-    // Show selected section
     document.getElementById(`section-${sectionName}`).classList.remove('hidden');
-
-    // Activate corresponding nav button
     document.getElementById(`nav-${sectionName}`).classList.add('active');
   }
 
-  // ===== ERROR HANDLING =====
   handleCriticalError(message) {
     try {
-      // Try to display error in popup body
       document.body.innerHTML = `
                 <div style="padding: 20px; text-align: center; color: #ff4444;">
                     <h3>Auris Extension Error</h3>
@@ -1419,23 +1375,18 @@ class AurisPopup {
                 </div>
             `;
     } catch (error) {
-      // Last resort
       console.error('Auris: Critical error handler failed:', error);
     }
   }
 
   showErrorState(message) {
     try {
-      // Try to show error in status element
       if (this.statusElement) {
         this.statusElement.textContent = `${message}`;
         this.statusElement.className = 'status error';
       }
 
-      // Also log to console for debugging
       console.error('Auris Popup Error:', message);
-
-      // Try to show a fallback error in the popup body
       const errorDiv = document.createElement('div');
       errorDiv.className = 'popup-error';
       errorDiv.innerHTML = `
@@ -1444,23 +1395,17 @@ class AurisPopup {
                 </div>
             `;
 
-      // Insert at top of popup if possible
       const popupBody = document.querySelector('.popup-container') || document.body;
       if (popupBody && !document.querySelector('.popup-error')) {
         popupBody.insertBefore(errorDiv, popupBody.firstChild);
       }
     } catch (error) {
-      // Last resort - just log to console
       console.error('Auris: Critical error - could not display error state:', error);
     }
   }
 
-  // ===== CUSTOM DROPDOWN =====
   initializeCustomDropdown() {
-    // Create custom dropdown structure
     this.createCustomDropdown();
-
-    // Set up event listeners
     this.setupCustomDropdownEvents();
   }
 
@@ -1468,24 +1413,18 @@ class AurisPopup {
     const controlRow = this.presetSelect.parentElement;
     const selectLabel = controlRow.querySelector('.control-label');
 
-    // Hide original select
     this.presetSelect.style.display = 'none';
-
-    // Create custom dropdown container
     const customContainer = document.createElement('div');
     customContainer.className = 'custom-select-container';
 
-    // Create trigger button
     const trigger = document.createElement('button');
     trigger.className = 'custom-select-trigger';
     trigger.type = 'button';
     trigger.textContent = this.presetSelect.options[this.presetSelect.selectedIndex].text;
 
-    // Create options container
     const optionsContainer = document.createElement('div');
     optionsContainer.className = 'custom-select-options';
 
-    // Create options
     for (let i = 0; i < this.presetSelect.options.length; i++) {
       const option = document.createElement('div');
       option.className = 'custom-select-option';
@@ -1499,19 +1438,14 @@ class AurisPopup {
       optionsContainer.appendChild(option);
     }
 
-    // Create blur overlay
     const blurOverlay = document.createElement('div');
     blurOverlay.className = 'dropdown-blur-overlay';
 
-    // Assemble custom dropdown
     customContainer.appendChild(trigger);
     customContainer.appendChild(optionsContainer);
 
-    // Insert after label
     controlRow.insertBefore(customContainer, this.presetSelect);
     document.body.appendChild(blurOverlay);
-
-    // Store references
     this.customSelectTrigger = trigger;
     this.customSelectOptions = optionsContainer;
     this.customSelectContainer = customContainer;
@@ -1521,47 +1455,35 @@ class AurisPopup {
   setupCustomDropdownEvents() {
     let isOpen = false;
 
-    // Toggle dropdown
     this.customSelectTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleCustomDropdown(!isOpen);
       isOpen = !isOpen;
     });
 
-    // Option selection
     this.customSelectOptions.addEventListener('click', (e) => {
       if (e.target.classList.contains('custom-select-option')) {
         const selectedValue = e.target.dataset.value;
         const selectedText = e.target.textContent;
 
-        // Update trigger text
         this.customSelectTrigger.textContent = selectedText;
-
-        // Update original select
         this.presetSelect.value = selectedValue;
-
-        // Update selected option styling
         this.customSelectOptions.querySelectorAll('.custom-select-option').forEach((opt) => {
           opt.classList.remove('selected');
         });
         e.target.classList.add('selected');
 
-        // Apply preset
         this.applyPreset(selectedValue);
-
-        // Close dropdown
         this.toggleCustomDropdown(false);
         isOpen = false;
       }
     });
 
-    // Close on blur overlay click
     this.dropdownBlurOverlay.addEventListener('click', () => {
       this.toggleCustomDropdown(false);
       isOpen = false;
     });
 
-    // Close on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && isOpen) {
         this.toggleCustomDropdown(false);
@@ -1582,9 +1504,7 @@ class AurisPopup {
     }
   }
 
-  // ===== CLEANUP =====
   cleanup() {
-    // Clear debounce timeouts to prevent memory leaks (only for volume/bass/voice controls)
     clearTimeout(this.volumeUpdateTimeout);
     clearTimeout(this.bassUpdateTimeout);
     clearTimeout(this.voiceUpdateTimeout);
@@ -1593,16 +1513,13 @@ class AurisPopup {
   }
 }
 
-// Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   const aurisPopup = new AurisPopup();
 
-  // Cleanup when popup is closed/unloaded
   window.addEventListener('beforeunload', () => {
     aurisPopup.cleanup();
   });
 
-  // Also cleanup when popup loses focus (Chrome extension popup behavior)
   window.addEventListener('blur', () => {
     aurisPopup.cleanup();
   });

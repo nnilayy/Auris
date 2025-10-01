@@ -1,63 +1,51 @@
-// antiDistortion.js (Phase 4)
-// Simple compressor + limiter chain to mitigate clipping at high boosts.
-
 export function createAntiDistortion(context) {
   const compressor = context.createDynamicsCompressor();
   const limiter = context.createDynamicsCompressor();
   const shaper = context.createWaveShaper();
-  // Post-dynamics makeup gain (allows cleaner loudness after controlled peaks)
   const makeupGain = context.createGain();
   makeupGain.gain.value = 1;
-  // Pre-trim low shelf to control infra/sub energy BEFORE compression
   const preLowTrim = context.createBiquadFilter();
   preLowTrim.type = 'lowshelf';
-  preLowTrim.frequency.value = 55; // below primary bass punch (center ~60-80Hz), still tames boom
+  preLowTrim.frequency.value = 55;
   preLowTrim.gain.value = 0;
-  // Post restore low shelf to re-inject musical bass AFTER control
   const bassRestore = context.createBiquadFilter();
   bassRestore.type = 'lowshelf';
-  bassRestore.frequency.value = 80; // punch region
+  bassRestore.frequency.value = 80;
   bassRestore.gain.value = 0;
 
-  // Presence clarity shelf (adds air after heavy dynamics so loudness feels cleaner)
   const presenceShelf = context.createBiquadFilter();
   presenceShelf.type = 'highshelf';
   presenceShelf.frequency.value = 4800;
   presenceShelf.gain.value = 0;
 
-  // Final gain stage (clean loudness after shaping)
   const finalGain = context.createGain();
   finalGain.gain.value = 1;
 
-  // Parallel punch enhancement path (restores transient mid-bass energy for thump)
   const punchHP = context.createBiquadFilter();
   punchHP.type = 'highpass';
-  punchHP.frequency.value = 50; // clear sub rumble
+  punchHP.frequency.value = 50;
   const punchPeak = context.createBiquadFilter();
   punchPeak.type = 'peaking';
-  punchPeak.frequency.value = 80; // main thump center
+  punchPeak.frequency.value = 80;
   punchPeak.Q.value = 1.0;
   punchPeak.gain.value = 0;
   const punchGain = context.createGain();
-  punchGain.gain.value = 0; // mix amount (0..~0.65)
+  punchGain.gain.value = 0;
 
-  // Base tuned profile (always-on dynamics)
   function setBase() {
-    // Baseline: moderate compression, leave some punch (slightly slower attack)
     compressor.threshold.value = -6;
     compressor.knee.value = 10;
     compressor.ratio.value = 6;
-    compressor.attack.value = 0.003; // allow leading transient edge
+    compressor.attack.value = 0.003;
     compressor.release.value = 0.12;
 
-    limiter.threshold.value = -0.7; // tiny bit more headroom buffer
+    limiter.threshold.value = -0.7;
     limiter.knee.value = 1;
-    limiter.ratio.value = 14; // slightly softer than 20:1
-    limiter.attack.value = 0.001; // still fast but not ultra-snap
+    limiter.ratio.value = 14;
+    limiter.attack.value = 0.001;
     limiter.release.value = 0.06;
   }
 
-  // Older tuned base values ("felt better" profile)
   function setTunedCompressor(
     threshold = -6,
     knee = 10,
@@ -102,8 +90,6 @@ export function createAntiDistortion(context) {
     return curve;
   }
 
-  // Wiring (new): preLowTrim -> compressor -> [optional shaper] -> limiter -> makeupGain -> bassRestore -> presenceShelf -> finalGain
-  // Parallel: preLowTrim -> punchHP -> punchPeak -> punchGain -> (sums into makeupGain)
   let shaperActive = false;
   function updateConnections() {
     try { preLowTrim.disconnect(); } catch {}
@@ -130,14 +116,13 @@ export function createAntiDistortion(context) {
   try { presenceShelf.disconnect(); } catch {}
   presenceShelf.connect(finalGain);
 
-    // Rebuild punch parallel path
     try { punchHP.disconnect(); } catch {}
     try { punchPeak.disconnect(); } catch {}
     try { punchGain.disconnect(); } catch {}
     preLowTrim.connect(punchHP);
     punchHP.connect(punchPeak);
     punchPeak.connect(punchGain);
-    punchGain.connect(makeupGain); // sum before restore shelf so restore still shapes composite
+    punchGain.connect(makeupGain);
   }
 
   setBase();
