@@ -70,7 +70,7 @@ Auris is currently supported for these browsers listed below. For unsupported br
 - **Firefox**: ❌ (Coming soon)
 - **Safari**: ❌ (Coming soon)
 
-## Contributions:
+## Contributions
 Contributions are welcome! If you have suggestions, bug reports, or feature requests, feel free to create an issue or submit a pull request.
 
 ### Steps to Contribute:
@@ -94,6 +94,6 @@ If you have any questions or need further assistance, feel free to reach out:
 
 <div align="center">
 
-**Made with ❤️ for audio enthusiasts**
+**Made with ❤️ for those who love to listen**
 
 </div>
