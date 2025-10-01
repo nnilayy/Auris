@@ -38,6 +38,26 @@ Auris is a powerful browser extension that transforms your tab audio experience 
 - **Echo Effects**: Adjustable delay, feedback, and wet/dry mix
 - **Real-time parameter control** for all effects
 
+## Installation
+
+### From Chrome Web Store
+1. Visit the [Auris Chrome Web Store page](https://chromewebstore.google.com/detail/auris-audio-equalizer/placeholder-id)
+2. Click "Add to Chrome"
+3. Grant necessary permissions for tab audio access
+
+### Manual Installation (Developer Mode)
+1. Clone this repository: 
+   ```
+   git clone https://github.com/nnilayy/Auris.git
+   ```
+2. Open Chrome and navigate to:
+   ```
+   chrome://extensions/
+   ```
+3. Enable `Developer mode` in the top right
+4. Click `Load unpacked` and select the Auris folder
+5. The extension will appear in your toolbar
+
 ## Supported Browsers
 
 Auris is currently supported for these browsers listed below. For unsupported browsers, support will be rolled out soon.
@@ -49,20 +69,6 @@ Auris is currently supported for these browsers listed below. For unsupported br
 - **Opera**: ❌ (Coming soon)
 - **Firefox**: ❌ (Coming soon)
 - **Safari**: ❌ (Coming soon)
-
-## Installation
-
-### From Chrome Web Store (Recommended)
-1. Visit the [Auris Chrome Web Store page](https://chromewebstore.google.com/detail/auris-audio-equalizer/placeholder-id)
-2. Click "Add to Chrome"
-3. Grant necessary permissions for tab audio access
-
-### Manual Installation (Developer Mode)
-1. Clone this repository: `git clone https://github.com/nnilayy/Auris.git`
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the Auris folder
-5. The extension will appear in your toolbar
 
 ## Usage
 
