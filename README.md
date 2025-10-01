@@ -16,27 +16,30 @@
 
 ## Overview
 
-Auris is a powerful browser extension that transforms your tab audio experience with professional-grade audio processing. Whether you're listening to music, watching videos, or in a video call, Auris enhances your audio with a complete studio-style signal chain featuring EQ, dynamic controls, spatial effects, and more.
+**Auris** is a browser extension that enhances audio from any tab with professional audio processing tools. Whether you're watching videos, listening to music, or in video calls, Auris helps improve your audio experience with equalizers, volume controls, and spatial effects.
+
+**What Auris can do for you:**
+- **Works everywhere**: Compatible with YouTube, Spotify, Netflix, Zoom, and any website with audio
+- **Instant enhancement**: Real-time audio processing without delays or interruptions
+- **Easy to use**: Simple controls and presets make professional audio tools accessible to everyone
+- **Customizable**: Fine-tune settings to match your preferences and hearing needs
+
+Auris is designed to help you get better sound from your browser, whether you want clearer voices in meetings, deeper bass in music, or just need to boost quiet audio.
 
 ## Key Features
 
-### **Professional Equalizer**
-- **10-band parametric EQ** with precise frequency control
-- **Pre-built presets**: Rock, Pop, Jazz, Classical, Electronic, Hip-Hop, Vocal, Bass-Heavy, Treble-Boost
-- **Custom EQ curves** with real-time visualization
-- **Flat response** for audiophile listening
+### **Equalizer**
+Fine-tune your audio with a 10-band EQ featuring multiple presets (Rock, Pop, Jazz, Classical, Electronic, Hip-Hop, Vocal) or create your own custom sound profile with precise frequency control from 32Hz to 16kHz.
 
-### **Dynamic Audio Controls**
-- **Volume Boost**: Amplify quiet audio beyond system limits
-- **Bass Enhancement**: Deep, rich low-end enhancement
-- **Voice Clarity**: Intelligent vocal frequency boosting
-- **Anti-Distortion**: Prevents clipping and maintains audio quality
+### **Audio Enhancement**
+- **Volume Boost**: Amplify audio up to **800%** beyond your system's maximum volume - perfect for quiet videos and low-volume content
+- **Bass Boost**: Enhanced low-frequency response with adjustable intensity - controls sub-bass (20-60Hz) and mid-bass (60-250Hz) separately
+- **Voice Clarity**: Intelligent vocal frequency boosting (300Hz-3kHz range) with adjustable strength for clearer speech, podcasts, and vocals
 
-### **Immersive Spatial Effects**
-- **8D Audio**: Customizable orbital sound movement with speed control
-- **Surround Sound**: Virtual surround with adjustable depth and width
-- **Echo Effects**: Adjustable delay, feedback, and wet/dry mix
-- **Real-time parameter control** for all effects
+### **Spatial Effects**
+- **8D Audio**: Creates immersive orbital sound movement - configure **rotation speed**, **orbit radius**, and **elevation angle** for personalized spatial experience
+- **Surround Sound**: Virtual 5.1/7.1 surround from stereo sources - adjust **room size**, **speaker distance**, and **surround intensity**
+- **Echo**: Add depth and ambiance - control **delay time** (50-500ms), **feedback amount** (0-95%), and **wet/dry mix** for perfect reverb balance
 
 ## Installation
 
