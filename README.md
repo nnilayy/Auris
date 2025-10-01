@@ -70,25 +70,6 @@ Auris is currently supported for these browsers listed below. For unsupported br
 - **Firefox**: ❌ (Coming soon)
 - **Safari**: ❌ (Coming soon)
 
-## Usage
-
-1. **Click the Auris icon** in your Chrome toolbar
-2. **Select your audio source** from active tabs
-3. **Choose a preset** or customize your EQ settings
-4. **Adjust controls** like volume, bass, and voice enhancement
-5. **Enable effects** like 8D audio or surround sound
-6. **Fine-tune parameters** in real-time
-
-### Quick Start Presets
-
-- **Rock**: Punchy mids, enhanced highs
-- **Pop**: Balanced with vocal presence  
-- **Jazz**: Warm mids, smooth highs
-- **Classical**: Natural, uncolored response
-- **Electronic**: Enhanced sub-bass and sparkle
-- **Hip-Hop**: Deep bass, crisp vocals
-- **Vocal**: Optimized for speech clarity
-
 ## Contributions:
 Contributions are welcome! If you have suggestions, bug reports, or feature requests, feel free to create an issue or submit a pull request.
 
