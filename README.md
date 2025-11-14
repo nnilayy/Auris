@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="src/icons/auris-icon-light-svg-512.png" alt="Auris Logo" width="200" height="200">
+<img src="src\icons\hero.png" alt="Auris Logo" width="700">
 
 # Auris
 
